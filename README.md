@@ -13,28 +13,13 @@ poetry install
 ### Usage
 
 ```bash
-python main.py
+python -m mem_agent
 ```
 
 ## Evaluation
 
-### Installation
+See [Evaluation Memory Framework](./evaluation/README.md)
 
-```bash
-poetry install --with eval
-```
+## Acknowledgement & License Notice
 
-### Configuration
-
-1. Copy the `.env-example` file to `.env`, and fill in the required environment variables according to your environment and API keys.
-
-2. Copy the `configs-example/` directory to a new directory named `configs/`, and modify the configuration files inside it as needed. This directory contains model and API-specific settings.
-
-### LoCoMo Evaluation
-⚙️ To evaluate the **LoCoMo** dataset using one of the supported memory frameworks — `memos`, `mem0`, or `zep` — run the following [script](./scripts/run_locomo_eval.sh):
-
-```bash
-# Edit the configuration in ./scripts/run_locomo_eval.sh
-# Specify the model and memory backend you want to use (e.g., mem0, zep, etc.)
-./scripts/run_locomo_eval.sh
-```
+The [Evaluation Memory Framework](./evaluation/README.md) in this project is adapted from the open-source project [MemOS](https://github.com/MemTensor/MemOS), which is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Please adhere to the terms of the Apache-2.0 license when using relevant contents. Many thanks to the MemOS project for their excellent work!
