@@ -1,0 +1,44 @@
+[project]
+name = "mem-agent"
+version = "0.1.0"
+description = ""
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Sunshine-wzy",email = "sunshinewzy@qq.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "mem0ai (>=0.1.114,<0.2.0)",
+    "openai (>=1.97.0,<2.0.0)",
+    "transformers (>=4.51.3,<5.0.0)",
+    "scikit-learn (>=1.7.0,<2.0.0)",
+]
+
+[project.urls]
+repository = "https://github.com/Sunshine-wzy/mem-agent"
+issues = "https://github.com/Sunshine-wzy/mem-agent/issues"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.eval]
+optional = true
+
+[tool.poetry.group.eval.dependencies]
+dotenv = "^0.9.9"
+zep-cloud = "^2.15.0"
+rouge-score = "^0.1.2"
+nltk = "^3.9.1"
+bert-score = "^0.3.13"
+scipy = "^1.10.1"
+python-dotenv = "^1.1.1"
+langgraph = "^0.5.1"
+langmem = "^0.0.27"
+memoryos = "^0.2.1"
+
+[[tool.poetry.source]]
+name = "mirrors"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
+priority = "supplemental"
