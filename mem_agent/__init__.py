@@ -1,6 +1,8 @@
-from openai import OpenAI
+from dotenv import load_dotenv
 from mem0 import Memory
+from openai import OpenAI
 
+load_dotenv()
 
 config = {
     "vector_store": {
