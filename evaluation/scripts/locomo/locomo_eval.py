@@ -363,8 +363,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lib",
         type=str,
-        choices=["zep", "memos", "mem0", "mem0_graph", "langmem", "openai"],
-        help="Specify the memory framework (zep or memos or mem0 or mem0_graph)",
+        choices=["mem_agent", "zep", "memos", "mem0", "mem0_graph", "langmem", "openai"],
+        help="Specify the memory framework (mem_agent or zep or memos or mem0 or mem0_graph)",
     )
     parser.add_argument(
         "--version",

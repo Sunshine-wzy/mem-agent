@@ -9,12 +9,17 @@ import pandas as pd
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from prompts import ANSWER_PROMPT_MEM0, ANSWER_PROMPT_MEMOS, ANSWER_PROMPT_ZEP
+from prompts import ANSWER_PROMPT_MEM_AGENT, ANSWER_PROMPT_MEM0, ANSWER_PROMPT_MEMOS, ANSWER_PROMPT_ZEP
 from tqdm import tqdm
 
 
 async def locomo_response(frame, llm_client, context: str, question: str) -> str:
-    if frame == "zep":
+    if frame == "mem_agent":
+        prompt = ANSWER_PROMPT_MEM_AGENT.format(
+            context=context,
+            question=question,
+        )
+    elif frame == "zep":
         prompt = ANSWER_PROMPT_ZEP.format(
             context=context,
             question=question,
@@ -124,8 +129,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lib",
         type=str,
-        choices=["zep", "memos", "mem0", "mem0_graph", "openai"],
-        help="Specify the memory framework (zep or memos or mem0 or mem0_graph)",
+        choices=["mem_agent", "zep", "memos", "mem0", "mem0_graph", "openai"],
+        help="Specify the memory framework (mem_agent or zep or memos or mem0 or mem0_graph)",
     )
     parser.add_argument(
         "--version",

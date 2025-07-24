@@ -51,7 +51,7 @@ Generate personal memories that follow these guidelines:
 
 def get_client(frame: str, user_id: str | None = None, version: str = "default"):
     if frame == "mem_agent":
-        mem_agent = MemAgent()
+        mem_agent = MemAgent(custom_instructions=custom_instructions)
         return mem_agent
     
     elif frame == "zep":
@@ -110,7 +110,45 @@ def ingest_session(client, session, frame, metadata, revised_client=None):
     print(f"Processing conv {conv_id}, session {metadata['session_key']}")
     start_time = time.time()
 
-    if frame == "zep":
+    if frame == "mem_agent":
+        print(f"Processing abc for {metadata['session_key']}")
+        messages = []
+        messages_reverse = []
+
+        for chat in tqdm(session, desc=f"{metadata['session_key']}"):
+            data = chat.get("speaker") + ": " + chat.get("text")
+
+            if chat.get("speaker") == metadata["speaker_a"]:
+                messages.append({"role": "user", "content": data})
+                messages_reverse.append({"role": "assistant", "content": data})
+            elif chat.get("speaker") == metadata["speaker_b"]:
+                messages.append({"role": "assistant", "content": data})
+                messages_reverse.append({"role": "user", "content": data})
+            else:
+                raise ValueError(
+                    f"Unknown speaker {chat.get('speaker')} in session {metadata['session_key']}"
+                )
+
+            print({"context": data, "conv_id": conv_id, "created_at": iso_date})
+
+        for i in range(0, len(messages), 2):
+            batch_messages = messages[i : i + 2]
+            batch_messages_reverse = messages_reverse[i : i + 2]
+
+            client.add(
+                messages=batch_messages,
+                timestamp=timestamp,
+                user_id=metadata["speaker_a_user_id"],
+                version="v2",
+            )
+            client.add(
+                messages=batch_messages_reverse,
+                timestamp=timestamp,
+                user_id=metadata["speaker_b_user_id"],
+                version="v2",
+            )
+
+    elif frame == "zep":
         for chat in tqdm(session, desc=f"{metadata['session_key']}"):
             data = chat.get("speaker") + ": " + chat.get("text")
             print({"context": data, "conv_id": conv_id, "created_at": iso_date})
@@ -238,7 +276,9 @@ def process_user(conv_idx, frame, locomo_df, version, num_workers=1):
         valid_sessions = 0
 
         revised_client = None
-        if frame == "zep":
+        if frame == "mem_agent":
+            client = get_client("mem_agent")
+        elif frame == "zep":
             client = get_client("zep")
         elif frame == "mem0" or frame == "mem0_graph":
             client = get_client(frame)
@@ -345,8 +385,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lib",
         type=str,
-        choices=["zep", "memos", "mem0", "mem0_graph"],
-        help="Specify the memory framework (zep or memos or mem0 or mem0_graph)",
+        choices=["mem_agent", "zep", "memos", "mem0", "mem0_graph"],
+        help="Specify the memory framework (mem_agent or zep or memos or mem0 or mem0_graph)",
     )
     parser.add_argument(
         "--version",

@@ -11,6 +11,8 @@ import pandas as pd
 from dotenv import load_dotenv
 from mem0 import MemoryClient
 from tqdm import tqdm
+
+from mem_agent.main import MemAgent
 from utils import filter_memory_data
 from zep_cloud.client import Zep
 
@@ -19,7 +21,11 @@ from memos.mem_os.main import MOS
 
 
 def get_client(frame: str, user_id: str | None = None, version: str = "default", top_k: int = 20):
-    if frame == "zep":
+    if frame == "mem_agent":
+        mem_agent = MemAgent()
+        return mem_agent
+    
+    elif frame == "zep":
         zep = Zep(api_key=os.getenv("ZEP_API_KEY"), base_url="https://api.getzep.com/api/v2")
         return zep
 
@@ -46,6 +52,15 @@ def get_client(frame: str, user_id: str | None = None, version: str = "default",
 
         return mos
 
+
+TEMPLATE_MEM_AGENT = """Memories for user {speaker_1_user_id}:
+
+    {speaker_1_memories}
+
+    Memories for user {speaker_2_user_id}:
+
+    {speaker_2_memories}
+"""
 
 TEMPLATE_ZEP = """
 FACTS and ENTITIES represent relevant context to the current conversation.
@@ -101,6 +116,58 @@ TEMPLATE_MEMOS = """Memories for user {speaker_1}:
     {speaker_2_memories}
 """
 
+
+def mem_agent_search(client, query, speaker_a_user_id, speaker_b_user_id, limit=20):
+    start = time()
+    search_speaker_a_results = client.search(
+        query=query,
+        limit=limit,
+        user_id=speaker_a_user_id,
+        filters={"AND": [{"user_id": f"{speaker_a_user_id}"}, {"run_id": "*"}]},
+    )
+    search_speaker_b_results = client.search(
+        query=query,
+        limit=limit,
+        user_id=speaker_b_user_id,
+        filters={"AND": [{"user_id": f"{speaker_b_user_id}"}, {"run_id": "*"}]},
+    )
+
+    search_speaker_a_memory = [
+        {
+            "memory": memory["memory"],
+            "timestamp": memory["created_at"],
+            "score": round(memory["score"], 2),
+        }
+        for memory in search_speaker_a_results["results"]
+    ]
+
+    search_speaker_a_memory = [
+        [f"{item['timestamp']}: {item['memory']}" for item in search_speaker_a_memory]
+    ]
+
+    search_speaker_b_memory = [
+        {
+            "memory": memory["memory"],
+            "timestamp": memory["created_at"],
+            "score": round(memory["score"], 2),
+        }
+        for memory in search_speaker_b_results["results"]
+    ]
+
+    search_speaker_b_memory = [
+        [f"{item['timestamp']}: {item['memory']}" for item in search_speaker_b_memory]
+    ]
+
+    context = TEMPLATE_MEM_AGENT.format(
+        speaker_1_user_id=speaker_a_user_id.split("_")[0],
+        speaker_1_memories=json.dumps(search_speaker_a_memory, indent=4),
+        speaker_2_user_id=speaker_b_user_id.split("_")[0],
+        speaker_2_memories=json.dumps(search_speaker_b_memory, indent=4),
+    )
+
+    print(query, context)
+    duration_ms = (time() - start) * 1000
+    return context, duration_ms
 
 def mem0_search(client, query, speaker_a_user_id, speaker_b_user_id, top_k=20):
     start = time()
@@ -304,7 +371,11 @@ def search_query(client, query, metadata, frame, reversed_client=None, top_k=20)
     speaker_a_user_id = metadata.get("speaker_a_user_id")
     speaker_b_user_id = metadata.get("speaker_b_user_id")
 
-    if frame == "zep":
+    if frame == "mem_agent":
+        context, duration_ms = mem_agent_search(
+            client, query, speaker_a_user_id, speaker_b_user_id, top_k
+        )
+    elif frame == "zep":
         context, duration_ms = zep_search(client, query, conv_id, top_k)
     elif frame == "mem0":
         context, duration_ms = mem0_search(
@@ -439,8 +510,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lib",
         type=str,
-        choices=["zep", "memos", "mem0", "mem0_graph", "langmem"],
-        help="Specify the memory framework (zep or memos or mem0 or mem0_graph)",
+        choices=["mem_agent", "zep", "memos", "mem0", "mem0_graph", "langmem"],
+        help="Specify the memory framework (mem_agent or zep or memos or mem0 or mem0_graph)",
     )
     parser.add_argument(
         "--version",
