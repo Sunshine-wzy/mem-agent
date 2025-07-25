@@ -51,7 +51,7 @@ Generate personal memories that follow these guidelines:
 
 def get_client(frame: str, user_id: str | None = None, version: str = "default"):
     if frame == "mem_agent":
-        mem_agent = MemAgent(custom_instructions=custom_instructions)
+        mem_agent = MemAgent()
         return mem_agent
     
     elif frame == "zep":

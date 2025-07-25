@@ -7,11 +7,8 @@ from . import config
 
 
 class MemAgent:
-    def __init__(self, custom_instructions: Optional[str] = None):
-        memory_config = config.copy()
-        if custom_instructions is not None:
-            memory_config["custom_fact_extraction_prompt"] = custom_instructions
-        self.memory = Memory.from_config(memory_config)
+    def __init__(self):
+        self.memory = Memory.from_config(config)
 
     def add(
         self,
