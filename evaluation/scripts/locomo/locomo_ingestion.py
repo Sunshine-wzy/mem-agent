@@ -137,15 +137,13 @@ def ingest_session(client, session, frame, metadata, revised_client=None):
 
             client.add(
                 messages=batch_messages,
-                timestamp=timestamp,
                 user_id=metadata["speaker_a_user_id"],
-                version="v2",
+                metadata={"timestamp": timestamp},
             )
             client.add(
                 messages=batch_messages_reverse,
-                timestamp=timestamp,
                 user_id=metadata["speaker_b_user_id"],
-                version="v2",
+                metadata={"timestamp": timestamp},
             )
 
     elif frame == "zep":
