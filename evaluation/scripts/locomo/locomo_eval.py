@@ -28,6 +28,7 @@ transformers.logging.set_verbosity_error()
 try:
     nltk.download("wordnet", quiet=True)
     nltk.download("punkt", quiet=True)
+    nltk.download("punkt_tab", quiet=True)
     print("NLTK resources downloaded successfully.")
 except Exception as e:
     print(f"Warning: Failed to download NLTK resources: {e}")
@@ -78,19 +79,40 @@ async def locomo_grader(llm_client, question: str, gold_answer: str, response: s
     Just return the label CORRECT or WRONG in a json format with the key as "label".
     """
 
-    response = await llm_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": accuracy_prompt},
-        ],
-        temperature=0,
-    )
-    message_content = response.choices[0].message.content
-    label = json.loads(message_content)["label"]
-    parsed = LLMGrade(llm_judgment=label, llm_reasoning="")
+    try:
+        response = await llm_client.chat.completions.create(
+            model=os.getenv("CHAT_MODEL"),
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": accuracy_prompt},
+            ],
+            temperature=0,
+        )
+        message_content = response.choices[0].message.content
 
-    return parsed.llm_judgment.strip().lower() == "correct"
+        if not message_content or message_content.strip() == "":
+            print(f"Empty response from OpenAI API for question: {question[:50]}...")
+            return False
+
+        try:
+            label = json.loads(message_content)["label"]
+        except json.JSONDecodeError:
+            # Try to extract CORRECT/WRONG from the message if it's not valid JSON
+            message_upper = message_content.upper()
+            if "CORRECT" in message_upper and "WRONG" not in message_upper:
+                label = "CORRECT"
+            elif "WRONG" in message_upper and "CORRECT" not in message_upper:
+                label = "WRONG"
+            else:
+                print(f"Failed to parse JSON response: {message_content}")
+                return False
+        
+        parsed = LLMGrade(llm_judgment=label, llm_reasoning="")
+        return parsed.llm_judgment.strip().lower() == "correct"
+
+    except Exception as e:
+        print(f"Error in locomo_grader: {e}")
+        return False
 
 
 def calculate_rouge_scores(gold_answer, response):

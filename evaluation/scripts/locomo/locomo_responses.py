@@ -34,14 +34,21 @@ async def locomo_response(frame, llm_client, context: str, question: str) -> str
             context=context,
             question=question,
         )
-    response = await llm_client.chat.completions.create(
-        model=os.getenv("CHAT_MODEL"),
-        messages=[
-            {"role": "system", "content": prompt},
-        ],
-        temperature=0,
-    )
-    result = response.choices[0].message.content or ""
+    
+    try:
+        response = await llm_client.chat.completions.create(
+            model=os.getenv("CHAT_MODEL"),
+            messages=[
+                {"role": "system", "content": prompt},
+            ],
+            temperature=0,
+        )
+        result = response.choices[0].message.content or ""
+    except Exception as e:
+        print(f"Error with prompt (first 200 chars): {prompt[:200]}...")
+        print(f"Full error: {e}")
+        # Return a fallback response
+        result = "Unable to generate response due to API error"
 
     return result
 

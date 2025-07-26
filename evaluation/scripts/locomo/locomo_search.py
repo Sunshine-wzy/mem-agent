@@ -123,13 +123,11 @@ def mem_agent_search(client, query, speaker_a_user_id, speaker_b_user_id, limit=
         query=query,
         limit=limit,
         user_id=speaker_a_user_id,
-        filters={"AND": [{"user_id": f"{speaker_a_user_id}"}, {"run_id": "*"}]},
     )
     search_speaker_b_results = client.search(
         query=query,
         limit=limit,
         user_id=speaker_b_user_id,
-        filters={"AND": [{"user_id": f"{speaker_b_user_id}"}, {"run_id": "*"}]},
     )
 
     search_speaker_a_memory = [
